@@ -51,19 +51,19 @@ export const navLinks: TNavLink[] = [
 
 const services: TService[] = [
   {
-    title: "Web Developer",
+    title: "Backend Developer ",
     icon: web,
   },
   {
-    title: "React Native Developer",
+    title: "Data Scientist",
     icon: mobile,
   },
   {
-    title: "Backend Developer",
+    title: "ML & DL Model Developer",
     icon: backend,
   },
   {
-    title: "Content Creator",
+    title: "Kaggler",
     icon: creator,
   },
 ];
@@ -125,55 +125,55 @@ const technologies: TTechnology[] = [
 
 const experiences: TExperience[] = [
   {
-    title: "React.js Developer",
-    companyName: "Starbucks",
+    title: "Python Developer",
+    companyName: "Python",
     icon: starbucks,
     iconBg: "#383E56",
-    date: "March 2020 - April 2021",
+    date: "May 2021 -- March 2022",
     points: [
-      "Developing and maintaining web applications using React.js and other related technologies.",
-      "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-      "Implementing responsive design and ensuring cross-browser compatibility.",
-      "Participating in code reviews and providing constructive feedback to other developers.",
+      "Initiated Python programming by developing foundational projects to establish a solid understanding of the language.",
+      "Progressed to designing and implementing more sophisticated projects, mastering key Python libraries and advanced file handling techniques.",
+      "Gained expertise in integrating databases with Python to create dynamic, real-time applications.",
+      "Engaged in industry events and workshops to further enhance technical knowledge and stay informed on emerging trends and best practices.",
     ],
   },
   {
-    title: "React Native Developer",
-    companyName: "Tesla",
+    title: "Backend Developer",
+    companyName: "Python, Java",
     icon: tesla,
     iconBg: "#E6DEDD",
-    date: "Jan 2021 - Feb 2022",
+    date: "March 2022 -- Dec 2023",
     points: [
-      "Developing and maintaining web applications using React.js and other related technologies.",
-      "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-      "Implementing responsive design and ensuring cross-browser compatibility.",
-      "Participating in code reviews and providing constructive feedback to other developers.",
+      "Developing and maintaining web applications utilizing Flask and FastAPI to deliver robust and scalable solutions.",
+      "Collaborating with cross-functional teams, including frontend developers, associate engineers, and other stakeholders, to deliver high-quality products.",
+      "Designing and deploying a range of applications tailored to address societal needs and improve user experience.  ",
+      "Actively contributing to discussions on various platforms, offering solutions to complex challenges and fostering collaborative problem-solving.",
     ],
   },
   {
-    title: "Web Developer",
-    companyName: "Shopify",
+    title: "Data Scientist",
+    companyName: "Data Science",
     icon: shopify,
     iconBg: "#383E56",
-    date: "Jan 2022 - Jan 2023",
+    date: "Dec 2023 -- Nov 2024",
     points: [
-      "Developing and maintaining web applications using React.js and other related technologies.",
-      "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-      "Implementing responsive design and ensuring cross-browser compatibility.",
-      "Participating in code reviews and providing constructive feedback to other developers.",
+      "Utilizing a wide range of Python libraries to analyze and visualize data, transforming raw information into actionable insights.",
+      "Applying advanced algorithms to preprocess data and extract meaningful patterns and insights.",
+      "Implementing various machine learning models to uncover the underlying truth within datasets and drive data-driven decisions.",
+      "Actively engaging in code reviews, offering constructive feedback to peers, and fostering a culture of continuous improvement across multiple platforms.",
     ],
   },
   {
-    title: "Full stack Developer",
-    companyName: "Meta",
+    title: "ML and DL Developer",
+    companyName: "Artificial Intelligence",
     icon: meta,
     iconBg: "#E6DEDD",
-    date: "Jan 2023 - Present",
+    date: "Nov 2024 -- Present Day",
     points: [
-      "Developing and maintaining web applications using React.js and other related technologies.",
-      "Collaborating with cross-functional teams including designers, product managers, and other developers to create high-quality products.",
-      "Implementing responsive design and ensuring cross-browser compatibility.",
-      "Participating in code reviews and providing constructive feedback to other developers.",
+      "Developing and fine-tuning various predictive and classification models to address complex data challenges.",
+      "Collaborating with data science professionals on platforms like Kaggle to discuss model strategies and identify the optimal solutions for specific problems.",
+      "Implementing machine learning (ML) and deep learning (DL) models in various competitions on Kaggle and other platforms to showcase and refine skills.",
+      "Actively participating in code reviews, offering constructive feedback, and contributing to the improvement of solutions, primarily on Kaggle.",
     ],
   },
 ];
@@ -207,67 +207,67 @@ const testimonials: TTestimonial[] = [
 
 const projects: TProject[] = [
   {
-    name: "Car Rent",
+    name: "CV Attendance System",
     description:
-      "Web-based platform that allows users to search, book, and manage car rentals from various providers, providing a convenient and efficient solution for transportation needs.",
+      "A CV-based attendance system that uses facial recognition to accurately and efficiently mark attendance, enhancing security and reducing manual effort in educational and workplace environments.",
     tags: [
       {
-        name: "react",
+        name: "python",
         color: "blue-text-gradient",
       },
       {
-        name: "mongodb",
+        name: "flask",
         color: "green-text-gradient",
       },
       {
-        name: "tailwind",
+        name: "opencv",
         color: "pink-text-gradient",
       },
     ],
     image: carrent,
-    sourceCodeLink: "https://github.com/",
+    sourceCodeLink: "https://github.com/YogiramV/CV_Attendance",
   },
   {
-    name: "Job IT",
+    name: "Spam Classifier",
     description:
-      "Web application that enables users to search for job openings, view estimated salary ranges for positions, and locate available jobs based on their current location.",
+      "An email and message spam classifier using machine learning to filter spam, enhance communication, and protect users from phishing, with continuous learning for better accuracy.",
     tags: [
       {
-        name: "react",
+        name: "python",
         color: "blue-text-gradient",
       },
       {
-        name: "restapi",
+        name: "datascience",
         color: "green-text-gradient",
       },
       {
-        name: "scss",
+        name: "machinelearning",
         color: "pink-text-gradient",
       },
     ],
     image: jobit,
-    sourceCodeLink: "https://github.com/",
+    sourceCodeLink: "https://github.com/YusufDeesawala/Spam_Classification",
   },
   {
-    name: "Trip Guide",
+    name: "Platformer Game",
     description:
-      "A comprehensive travel booking platform that allows users to book flights, hotels, and rental cars, and offers curated recommendations for popular destinations.",
+      "A simple yet fun Python platformer game built with Pygame and deployed on PyPI. It features engaging gameplay, vibrant graphics, and smooth controls, offering an enjoyable experience for players of all ages.",
     tags: [
       {
-        name: "nextjs",
+        name: "pyton",
         color: "blue-text-gradient",
       },
       {
-        name: "supabase",
+        name: "pypi",
         color: "green-text-gradient",
       },
       {
-        name: "css",
+        name: "pygames",
         color: "pink-text-gradient",
       },
     ],
     image: tripguide,
-    sourceCodeLink: "https://github.com/",
+    sourceCodeLink: "https://pypi.org/project/TheOGPlatformer/",
   },
 ];
 

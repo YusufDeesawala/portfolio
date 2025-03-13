@@ -1,7 +1,6 @@
 import React from "react";
 import Tilt from "react-parallax-tilt";
 import { motion } from "framer-motion";
-
 import { services } from "../../constants";
 import { SectionWrapper } from "../../hoc";
 import { fadeIn } from "../../utils/motion";
@@ -48,14 +47,15 @@ const About = () => {
     <>
       <Header useMotion={true} {...config.sections.about} />
 
+      {/* Add ParticleComponent here */}
       <motion.p
         variants={fadeIn("", "", 0.1, 1)}
         className="text-secondary mt-4 max-w-3xl text-[17px] leading-[30px]"
-      >
+        >
         {config.sections.about.content}
       </motion.p>
-
-      <div className="mt-20 flex flex-wrap gap-10 max-sm:justify-center">
+      
+      <div className="mt-20 flex flex-wrap gap-10 max-sm:justify-center relative z-10">
         {services.map((service, index) => (
           <ServiceCard key={service.title} index={index} {...service} />
         ))}

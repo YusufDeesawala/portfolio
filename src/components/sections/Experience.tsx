@@ -12,6 +12,7 @@ import { Header } from "../atoms/Header";
 import { TExperience } from "../../types";
 import { config } from "../../constants/config";
 
+
 const ExperienceCard: React.FC<TExperience> = (experience) => {
   return (
     <VerticalTimelineElement
@@ -68,6 +69,7 @@ const Experience = () => {
           ))}
         </VerticalTimeline>
       </div>
+      
     </>
   );
 };
