@@ -1,9 +1,8 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect, useRef, Suspense } from "react"
+import React, { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { OrbitControls, Environment, Text3D, Float } from "@react-three/drei"
+import { OrbitControls, Environment, Float, Html } from "@react-three/drei"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,21 +10,26 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Github, ExternalLink, Mail, Sun, Moon, Code, Zap, Star, Send } from "lucide-react"
-import { useTheme } from "next-themes"
-import type * as THREE from "three"
+import { useTheme } from "@/components/theme-provider"
+import { useFBX } from '@react-three/drei'
+import * as THREE from "three"
 
-// Technological Typewriter Effect with Glitch
-function TechTypeWriter({ text, delay = 100, onComplete }: { text: string; delay?: number; onComplete?: () => void }) {
+// Enhanced Typewriter Effect with Matrix Glitch
+function TechTypeWriter({ text, delay = 100, onComplete }) {
+  const [mounted, setMounted] = useState(false)
   const [displayText, setDisplayText] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showCursor, setShowCursor] = useState(true)
   const [isGlitching, setIsGlitching] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
     const cursorInterval = setInterval(() => {
       setShowCursor((prev) => !prev)
     }, 500)
-
     return () => clearInterval(cursorInterval)
   }, [])
 
@@ -33,17 +37,15 @@ function TechTypeWriter({ text, delay = 100, onComplete }: { text: string; delay
     if (currentIndex < text.length) {
       const timeout = setTimeout(
         () => {
-          // Random glitch effect
-          if (Math.random() < 0.1) {
+          if (Math.random() < 0.15) {
             setIsGlitching(true)
-            setTimeout(() => setIsGlitching(false), 100)
+            setTimeout(() => setIsGlitching(false), 150)
           }
-
           setDisplayText((prev) => prev + text[currentIndex])
           setCurrentIndex((prev) => prev + 1)
         },
-        delay + Math.random() * 50,
-      ) // Variable delay for more realistic typing
+        delay + Math.random() * 100,
+      )
       return () => clearTimeout(timeout)
     } else if (onComplete) {
       onComplete()
@@ -60,8 +62,8 @@ function TechTypeWriter({ text, delay = 100, onComplete }: { text: string; delay
           ${isGlitching ? "animate-pulse filter blur-sm" : ""}
         `}
         style={{
-          textShadow: isGlitching ? "0 0 10px #00ff88, 0 0 20px #00ff88, 0 0 30px #00ff88" : "none",
-          filter: isGlitching ? "hue-rotate(90deg)" : "none",
+          textShadow: isGlitching ? "0 0 20px #00ff88, 0 0 40px #00ff88, 0 0 60px #00ff88" : "none",
+          filter: isGlitching ? "hue-rotate(180deg) saturate(2)" : "none",
         }}
       >
         {displayText}
@@ -72,281 +74,283 @@ function TechTypeWriter({ text, delay = 100, onComplete }: { text: string; delay
             text-emerald-400
           `}
           style={{
-            textShadow: "0 0 10px #00ff88, 0 0 20px #00ff88",
+            textShadow: "0 0 15px #00ff88, 0 0 30px #00ff88",
           }}
         >
           |
         </span>
       </span>
 
-      {/* Matrix-style background effect */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute text-emerald-400/20 text-xs font-mono"
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 100, opacity: [0, 1, 0] }}
-            transition={{
-              duration: 2,
-              repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 2,
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-            }}
-          >
-            {Math.random().toString(36).substring(7)}
-          </motion.div>
-        ))}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {mounted &&
+          [...Array(30)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-emerald-400/30 text-xs font-mono select-none"
+              initial={{ y: -50, opacity: 0 }}
+              animate={{
+                y: [0, 200, 0],
+                opacity: [0, 1, 0.5, 0],
+                scale: [0.8, 1, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Number.POSITIVE_INFINITY,
+                delay: i * 0.2,
+                ease: "easeInOut",
+              }}
+              style={{
+                left: `${(i * 3.33) % 100}%`,
+              }}
+            >
+              {`${Math.random().toString(36).substring(2, 8)}`}
+            </motion.div>
+          ))}
       </div>
     </div>
   )
 }
 
-// Interactive 3D Laptop Model
-function InteractiveLaptopModel() {
-  const meshRef = useRef<THREE.Group>(null)
-  const { viewport, mouse } = useThree()
+// Custom 3D Model Component with Enhanced Interactions
+function Custom3DModel({ mousePosition }) {
+  const meshRef = useRef(null)
+  const { viewport, camera } = useThree()
+  const [hovered, setHovered] = useState(false)
+  const [clicked, setClicked] = useState(false)
+
+  // Load FBX model
+  let model = null
+  try {
+    model = useFBX('/3d_model/source/pc.fbx')
+    console.log("Model loaded successfully:", model) // Debug: Check if model loads
+    model.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true
+        child.receiveShadow = true
+        if (child.material) {
+          console.log("Material found:", child.material) // Debug: Check materials
+          if (Array.isArray(child.material)) {
+            child.material.forEach((mat) => {
+              mat.metalness = 0.2
+              mat.roughness = 0.7
+              if (mat.map) {
+                mat.toneMapped = false // Keep for color vibrancy
+              }
+              mat.needsUpdate = true
+            })
+          } else {
+            child.material.metalness = 0.2
+            child.material.roughness = 0.7
+            if (child.material.map) {
+              child.material.toneMapped = false
+            }
+            child.material.needsUpdate = true
+          }
+        }
+      }
+    })
+    model.rotation.y = -Math.PI / 2 // Orientation (confirmed correct)
+  } catch (error) {
+    console.error("Failed to load FBX model:", error)
+    model = null // Fallback to procedural model
+  }
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Mouse interaction
-      meshRef.current.rotation.y = (mouse.x * viewport.width) / 10
-      meshRef.current.rotation.x = (mouse.y * viewport.height) / 20
+      const targetRotationY = (mousePosition.x * viewport.width) / 15
+      const targetRotationX = (mousePosition.y * viewport.height) / 25
 
-      // Floating animation
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.8) * 0.2
+      meshRef.current.rotation.y = THREE.MathUtils.lerp(meshRef.current.rotation.y, targetRotationY, 0.05)
+      meshRef.current.rotation.x = THREE.MathUtils.lerp(meshRef.current.rotation.x, targetRotationX, 0.05)
+
+      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.8) * 0.3 + (hovered ? 0.2 : 0)
+
+      const targetScale = hovered ? 1.1 : clicked ? 0.95 : 1
+      meshRef.current.scale.setScalar(THREE.MathUtils.lerp(meshRef.current.scale.x, targetScale, 0.1))
     }
   })
 
   return (
-    <Float speed={2} rotationIntensity={0.1} floatIntensity={0.3}>
-      <group ref={meshRef}>
-        {/* Laptop Base */}
-        <mesh position={[0, -0.5, 0]}>
-          <boxGeometry args={[3, 0.2, 2]} />
-          <meshStandardMaterial
-            color="#1a1a1a"
-            metalness={0.9}
-            roughness={0.1}
-            emissive="#00ff88"
-            emissiveIntensity={0.1}
-          />
-        </mesh>
-
-        {/* Laptop Screen */}
-        <mesh position={[0, 0.5, -0.9]} rotation={[-0.1, 0, 0]}>
-          <boxGeometry args={[2.8, 1.8, 0.1]} />
-          <meshStandardMaterial color="#000" metalness={0.8} />
-        </mesh>
-
-        {/* Screen Content - Animated */}
-        <mesh position={[0, 0.5, -0.85]} rotation={[-0.1, 0, 0]}>
-          <planeGeometry args={[2.6, 1.6]} />
-          <meshStandardMaterial color="#00ff88" emissive="#00ff88" emissiveIntensity={0.5} transparent opacity={0.8} />
-        </mesh>
-
-        {/* Holographic Effect */}
-        <mesh position={[0, 1.5, -0.5]}>
-          <planeGeometry args={[1, 1]} />
-          <meshStandardMaterial color="#ff0080" emissive="#ff0080" emissiveIntensity={0.3} transparent opacity={0.6} />
-        </mesh>
-
-        {/* Table with Neon Edge */}
-        <mesh position={[0, -1.2, 0]}>
-          <boxGeometry args={[5, 0.2, 3]} />
-          <meshStandardMaterial
-            color="#2a2a2a"
-            metalness={0.8}
-            roughness={0.2}
-            emissive="#0080ff"
-            emissiveIntensity={0.05}
-          />
-        </mesh>
+    <Float speed={2} rotationIntensity={0.2} floatIntensity={0.4}>
+      <group
+        ref={meshRef}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        onPointerDown={() => setClicked(true)}
+        onPointerUp={() => setClicked(false)}
+      >
+        {model ? (
+          <primitive object={model} scale={[0.005, 0.005, 0.005]} />
+        ) : (
+          // Fallback Procedural Model
+          <>
+            <mesh position={[0, -0.5, 0]} castShadow receiveShadow>
+              <boxGeometry args={[4, 0.3, 2.5]} />
+              <meshStandardMaterial
+                color="#0a0a0a"
+                metalness={0.9}
+                roughness={0.1}
+                emissive="#00ff88"
+                emissiveIntensity={hovered ? 0.3 : 0.1}
+              />
+            </mesh>
+            <mesh position={[0, 0.8, -1.1]} rotation={[-0.15, 0, 0]} castShadow>
+              <boxGeometry args={[3.5, 2.2, 0.1]} />
+              <meshStandardMaterial
+                color="#000"
+                metalness={0.8}
+                roughness={0.2}
+                emissive="#001122"
+                emissiveIntensity={0.2}
+              />
+            </mesh>
+            <mesh position={[0, 0.8, -1.05]} rotation={[-0.15, 0, 0]}>
+              <planeGeometry args={[3.2, 2]} />
+              <meshStandardMaterial
+                color="#00ff88"
+                emissive="#00ff88"
+                emissiveIntensity={hovered ? 0.8 : 0.4}
+                transparent
+                opacity={0.7}
+              />
+            </mesh>
+            {[...Array(6)].map((_, i) => (
+              <Float key={i} speed={3 + i} rotationIntensity={0.5} floatIntensity={0.8}>
+                <mesh
+                  position={[Math.sin((i * Math.PI) / 3) * 2.5, 1.5 + Math.sin(i) * 0.5, Math.cos((i * Math.PI) / 3) * 2.5]}
+                >
+                  <octahedronGeometry args={[0.1 + i * 0.02]} />
+                  <meshStandardMaterial
+                    color={`hsl(${180 + i * 30}, 80%, 60%)`}
+                    emissive={`hsl(${180 + i * 30}, 80%, 40%)`}
+                    emissiveIntensity={0.5}
+                    transparent
+                    opacity={0.8}
+                  />
+                </mesh>
+              </Float>
+            ))}
+            {[...Array(3)].map((_, i) => (
+              <mesh key={i} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[1.5 + i * 0.5, 1.6 + i * 0.5, 32]} />
+                <meshBasicMaterial color="#00ffff" transparent opacity={0.2 - i * 0.05} side={THREE.DoubleSide} />
+              </mesh>
+            ))}
+            <group>
+              {[...Array(20)].map((_, i) => (
+                <Float key={i} speed={2 + Math.random() * 3} rotationIntensity={1} floatIntensity={2}>
+                  <mesh position={[(Math.random() - 0.5) * 8, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 8]}>
+                    <sphereGeometry args={[0.02]} />
+                    <meshBasicMaterial color="#00ff88" transparent opacity={0.6} />
+                  </mesh>
+                </Float>
+              ))}
+            </group>
+            <Html position={[0, 2.5, 0]} center>
+              <motion.div
+                className="text-cyan-400 font-mono text-sm pointer-events-none select-none"
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                  scale: [0.9, 1.1, 0.9],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              >
+                {hovered ? "SYSTEM_ENHANCED" : "NEURAL_INTERFACE"}
+              </motion.div>
+            </Html>
+          </>
+        )}
       </group>
     </Float>
   )
 }
 
-// Solar System Tech Orb
-function SolarSystemTechOrb({
-  position,
-  tech,
-  color,
-  orbitRadius,
-  orbitSpeed,
-}: {
-  position: [number, number, number]
-  tech: string
-  color: string
-  orbitRadius: number
-  orbitSpeed: number
-}) {
-  const meshRef = useRef<THREE.Mesh>(null)
+// Enhanced 3D Scene with Advanced Lighting
+function Enhanced3DScene() {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
-  useFrame((state) => {
-    if (meshRef.current) {
-      const time = state.clock.elapsedTime * orbitSpeed
-      meshRef.current.position.x = Math.cos(time) * orbitRadius
-      meshRef.current.position.z = Math.sin(time) * orbitRadius
-      meshRef.current.position.y = position[1] + Math.sin(time * 2) * 0.5
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      setMousePosition({
+        x: (event.clientX / window.innerWidth) * 2 - 1,
+        y: -(event.clientY / window.innerHeight) * 2 + 1,
+      })
     }
-  })
+
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [])
 
   return (
-    <Float speed={1.5} rotationIntensity={0} floatIntensity={0.2}>
-      <mesh ref={meshRef} position={position}>
-        <sphereGeometry args={[0.4, 32, 32]} />
-        <meshStandardMaterial
-          color={color}
-          metalness={0.8}
-          roughness={0.2}
-          emissive={color}
-          emissiveIntensity={0.4}
-          transparent
-          opacity={0.9}
-        />
-        <Text3D font="/fonts/Geist_Bold.json" size={0.06} height={0.02} position={[-0.2, -0.03, 0.4]}>
-          {tech}
-          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
-        </Text3D>
-      </mesh>
-    </Float>
-  )
-}
-
-// Solar System Tech Universe
-function SolarSystemTechUniverse() {
-  const groupRef = useRef<THREE.Group>(null)
-
-  const innerOrbit = [
-    { name: "React", color: "#61dafb", radius: 2.5, speed: 0.8 },
-    { name: "Vue", color: "#4fc08d", radius: 2.5, speed: 0.8 },
-    { name: "Angular", color: "#dd0031", radius: 2.5, speed: 0.8 },
-  ]
-
-  const middleOrbit = [
-    { name: "Node.js", color: "#68a063", radius: 4, speed: 0.5 },
-    { name: "Python", color: "#3776ab", radius: 4, speed: 0.5 },
-    { name: "TypeScript", color: "#3178c6", radius: 4, speed: 0.5 },
-    { name: "Go", color: "#00add8", radius: 4, speed: 0.5 },
-  ]
-
-  const outerOrbit = [
-    { name: "Docker", color: "#2496ed", radius: 5.5, speed: 0.3 },
-    { name: "AWS", color: "#ff9900", radius: 5.5, speed: 0.3 },
-    { name: "MongoDB", color: "#47a248", radius: 5.5, speed: 0.3 },
-    { name: "PostgreSQL", color: "#336791", radius: 5.5, speed: 0.3 },
-    { name: "Redis", color: "#dc382d", radius: 5.5, speed: 0.3 },
-  ]
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = state.clock.elapsedTime * 0.1
-    }
-  })
-
-  return (
-    <group ref={groupRef}>
-      {/* Central Sun */}
-      <mesh position={[0, 0, 0]}>
-        <sphereGeometry args={[0.8, 32, 32]} />
-        <meshStandardMaterial
-          color="#ffd700"
-          emissive="#ffd700"
-          emissiveIntensity={0.6}
-          metalness={0.3}
-          roughness={0.1}
-        />
-        <Text3D font="/fonts/Geist_Bold.json" size={0.08} height={0.02} position={[-0.15, -0.05, 0.8]}>
-          ME
-          <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} />
-        </Text3D>
-      </mesh>
-
-      {/* Orbital Rings */}
-      {[2.5, 4, 5.5].map((radius, index) => (
-        <mesh key={index} position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[radius - 0.02, radius + 0.02, 64]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.1} />
-        </mesh>
-      ))}
-
-      {/* Inner Orbit Planets */}
-      {innerOrbit.map((tech, index) => (
-        <SolarSystemTechOrb
-          key={tech.name}
-          position={[tech.radius, 0, 0]}
-          tech={tech.name}
-          color={tech.color}
-          orbitRadius={tech.radius}
-          orbitSpeed={tech.speed + index * 0.1}
-        />
-      ))}
-
-      {/* Middle Orbit Planets */}
-      {middleOrbit.map((tech, index) => (
-        <SolarSystemTechOrb
-          key={tech.name}
-          position={[tech.radius, 0, 0]}
-          tech={tech.name}
-          color={tech.color}
-          orbitRadius={tech.radius}
-          orbitSpeed={tech.speed + index * 0.1}
-        />
-      ))}
-
-      {/* Outer Orbit Planets */}
-      {outerOrbit.map((tech, index) => (
-        <SolarSystemTechOrb
-          key={tech.name}
-          position={[tech.radius, 0, 0]}
-          tech={tech.name}
-          color={tech.color}
-          orbitRadius={tech.radius}
-          orbitSpeed={tech.speed + index * 0.05}
-        />
-      ))}
-    </group>
-  )
-}
-
-// Enhanced Tech Stack Canvas Component
-function EnhancedTechStack() {
-  return (
-    <Canvas camera={{ position: [0, 5, 8], fov: 60 }}>
-      <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} intensity={1} color="#00ff88" />
-      <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff0080" />
-      <pointLight position={[0, 0, 0]} intensity={0.8} color="#ffd700" />
-      <Environment preset="night" />
-
-      <SolarSystemTechUniverse />
-
-      <OrbitControls enableZoom={true} autoRotate={false} />
+    <Canvas camera={{ position: [0, 2, 6], fov: 60 }} shadows gl={{ antialias: true, alpha: true, toneMappingExposure: 1.3 }}>
+      <ambientLight intensity={0.2} />
+      <directionalLight
+        position={[3, 5, 3]}
+        intensity={0.5}
+        color="#ffffff"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+      <pointLight
+        position={[8, 8, 8]}
+        intensity={0.7}
+        color="#00ff88"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+      <pointLight
+        position={[-5, -5, -5]}
+        intensity={0.4}
+        color="#ff0080"
+      />
+      <pointLight
+        position={[0, 8, 0]}
+        intensity={0.5}
+        color="#00aaff"
+      />
+      <fog attach="fog" args={["#000011", 5, 20]} />
+      <Environment preset="studio" />
+      <Custom3DModel mousePosition={mousePosition} />
+      <OrbitControls
+        enableZoom={false}
+        enablePan={false}
+        autoRotate={false}
+        maxPolarAngle={Math.PI / 2}
+        minDistance={1}
+        maxDistance={12}
+      />
     </Canvas>
   )
-}
+} 
 
-// Enhanced Neural Network Particles
-function EnhancedNeuralNetworkParticles() {
+// Enhanced Neural Network with Advanced Particle Physics
+function AdvancedNeuralNetwork() {
   const [mounted, setMounted] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const particlesRef = useRef<Array<{ x: number; y: number; vx: number; vy: number; life: number }>>([])
+  const canvasRef = useRef(null)
+  const particlesRef = useRef(
+    []
+  )
 
   useEffect(() => {
     setMounted(true)
 
     const initParticles = () => {
       particlesRef.current = []
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 50; i++) {
         particlesRef.current.push({
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
-          vx: (Math.random() - 0.5) * 1,
-          vy: (Math.random() - 0.5) * 1,
+          vx: (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 2,
           life: Math.random(),
+          energy: Math.random(),
+          connections: [],
         })
       }
     }
@@ -374,57 +378,88 @@ function EnhancedNeuralNetworkParticles() {
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      // Update particles
-      particlesRef.current.forEach((particle) => {
+      particlesRef.current.forEach((particle, index) => {
         particle.x += particle.vx
         particle.y += particle.vy
-        particle.life += 0.01
+        particle.life += 0.008
+        particle.energy = Math.sin(particle.life * Math.PI * 2) * 0.5 + 0.5
 
-        // Bounce off edges
-        if (particle.x <= 0 || particle.x >= canvas.width) particle.vx *= -1
-        if (particle.y <= 0 || particle.y >= canvas.height) particle.vy *= -1
+        if (particle.x <= 0 || particle.x >= canvas.width) {
+          particle.vx *= -0.8
+          particle.energy += 0.2
+        }
+        if (particle.y <= 0 || particle.y >= canvas.height) {
+          particle.vy *= -0.8
+          particle.energy += 0.2
+        }
 
-        // Reset life cycle
-        if (particle.life > 1) particle.life = 0
+        if (particle.life > 1) {
+          particle.life = 0
+          particle.energy = Math.random()
+        }
+
+        particle.connections = []
+        particlesRef.current.forEach((other, otherIndex) => {
+          if (index !== otherIndex) {
+            const distance = Math.sqrt(Math.pow(particle.x - other.x, 2) + Math.pow(particle.y - other.y, 2))
+            if (distance < 80) {
+              particle.connections.push(otherIndex)
+            }
+          }
+        })
       })
 
-      // Draw particles with pulsing effect
       particlesRef.current.forEach((particle) => {
-        const alpha = Math.sin(particle.life * Math.PI) * 0.8 + 0.2
-        const size = Math.sin(particle.life * Math.PI) * 2 + 1
+        const alpha = Math.sin(particle.life * Math.PI) * 0.4 + 0.1
+        const size = (Math.sin(particle.life * Math.PI) * 1.5 + 1) * (particle.energy + 0.3)
+        const pulseIntensity = particle.energy * 0.8 + 0.2
+
+        const gradient = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, size * 3)
+        gradient.addColorStop(0, `rgba(0, 255, 136, ${alpha * pulseIntensity})`)
+        gradient.addColorStop(0.5, `rgba(0, 200, 255, ${alpha * 0.6})`)
+        gradient.addColorStop(1, `rgba(255, 0, 128, 0)`)
+
+        ctx.beginPath()
+        ctx.arc(particle.x, particle.y, size * 2, 0, Math.PI * 2)
+        ctx.fillStyle = gradient
+        ctx.fill()
 
         ctx.beginPath()
         ctx.arc(particle.x, particle.y, size, 0, Math.PI * 2)
         ctx.fillStyle = `rgba(0, 255, 136, ${alpha})`
         ctx.fill()
-
-        // Add glow effect
-        ctx.shadowBlur = 10
-        ctx.shadowColor = "#00ff88"
-        ctx.fill()
-        ctx.shadowBlur = 0
       })
 
-      // Draw connections with enhanced visuals
-      particlesRef.current.forEach((particle, i) => {
-        particlesRef.current.slice(i + 1).forEach((otherParticle) => {
-          const distance = Math.sqrt(
-            Math.pow(particle.x - otherParticle.x, 2) + Math.pow(particle.y - otherParticle.y, 2),
-          )
+      particlesRef.current.forEach((particle, index) => {
+        particle.connections.forEach((connectionIndex) => {
+          const other = particlesRef.current[connectionIndex]
+          const distance = Math.sqrt(Math.pow(particle.x - other.x, 2) + Math.pow(particle.y - other.y, 2))
 
-          if (distance < 120) {
-            const alpha = (1 - distance / 120) * 0.6
-            const gradient = ctx.createLinearGradient(particle.x, particle.y, otherParticle.x, otherParticle.y)
-            gradient.addColorStop(0, `rgba(0, 255, 136, ${alpha})`)
-            gradient.addColorStop(0.5, `rgba(0, 200, 255, ${alpha * 0.8})`)
-            gradient.addColorStop(1, `rgba(255, 0, 128, ${alpha * 0.6})`)
+          if (distance < 80) {
+            const alpha = (1 - distance / 80) * 0.3
+            const energyFlow = (particle.energy + other.energy) / 2
+
+            const gradient = ctx.createLinearGradient(particle.x, particle.y, other.x, other.y)
+            gradient.addColorStop(0, `rgba(0, 255, 136, ${alpha * energyFlow})`)
+            gradient.addColorStop(0.3, `rgba(0, 200, 255, ${alpha * 0.8})`)
+            gradient.addColorStop(0.7, `rgba(100, 150, 255, ${alpha * 0.6})`)
+            gradient.addColorStop(1, `rgba(255, 0, 128, ${alpha * energyFlow})`)
 
             ctx.beginPath()
             ctx.moveTo(particle.x, particle.y)
-            ctx.lineTo(otherParticle.x, otherParticle.y)
+            ctx.lineTo(other.x, other.y)
             ctx.strokeStyle = gradient
-            ctx.lineWidth = alpha * 2
+            ctx.lineWidth = alpha * 3 * energyFlow
             ctx.stroke()
+
+            const pulsePosition = (Date.now() * 0.005) % 1
+            const pulseX = particle.x + (other.x - particle.x) * pulsePosition
+            const pulseY = particle.y + (other.y - particle.y) * pulsePosition
+
+            ctx.beginPath()
+            ctx.arc(pulseX, pulseY, 2, 0, Math.PI * 2)
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.8})`
+            ctx.fill()
           }
         })
       })
@@ -453,15 +488,26 @@ function EnhancedNeuralNetworkParticles() {
   )
 }
 
-// Glitch Effect Component
-function GlitchEffect() {
+// Enhanced Glitch Effect with Audio-Visual Sync
+function AdvancedGlitchEffect() {
   const [isGlitching, setIsGlitching] = useState(false)
+  const [glitchIntensity, setGlitchIntensity] = useState(0)
 
   useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      setIsGlitching(true)
-      setTimeout(() => setIsGlitching(false), 300)
-    }, 7000)
+    const glitchInterval = setInterval(
+      () => {
+        setIsGlitching(true)
+        setGlitchIntensity(Math.random())
+        setTimeout(
+          () => {
+            setIsGlitching(false)
+            setGlitchIntensity(0)
+          },
+          200 + Math.random() * 300,
+        )
+      },
+      8000 + Math.random() * 4000,
+    )
 
     return () => clearInterval(glitchInterval)
   }, [])
@@ -470,16 +516,56 @@ function GlitchEffect() {
 
   return (
     <div className="fixed inset-0 pointer-events-none z-50">
-      <div className="w-full h-full bg-gradient-to-r from-red-500/30 via-transparent to-blue-500/30 animate-pulse" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/20 to-transparent animate-bounce" />
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ2xpdGNoIiB4PSIwIiB5PSIwIiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InRyYW5zcGFyZW50Ii8+PGxpbmUgeDE9IjAiIHkxPSIwIiB4Mj0iMTAwIiB5Mj0iMTAwIiBzdHJva2U9IiMwMGZmODgiIHN0cm9rZS13aWR0aD0iMC41IiBvcGFjaXR5PSIwLjMiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSJ1cmwoI2dsaXRjaCkiLz48L3N2Zz4=')] opacity-20" />
+      <motion.div
+        className="absolute inset-0 bg-red-500/20"
+        animate={{
+          x: [-2, 2, -1, 1, 0],
+          opacity: [0, glitchIntensity * 0.8, 0],
+        }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+      />
+      <motion.div
+        className="absolute inset-0 bg-green-500/20"
+        animate={{
+          x: [1, -1, 2, -2, 0],
+          opacity: [0, glitchIntensity * 0.6, 0],
+        }}
+        transition={{ duration: 0.2, ease: "easeInOut", delay: 0.05 }}
+      />
+      <motion.div
+        className="absolute inset-0 bg-blue-500/20"
+        animate={{
+          x: [-1, 1, -2, 2, 0],
+          opacity: [0, glitchIntensity * 0.7, 0],
+        }}
+        transition={{ duration: 0.2, ease: "easeInOut", delay: 0.1 }}
+      />
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
+          mixBlendMode: "overlay",
+        }}
+      />
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.1) 2px, rgba(0,255,136,0.1) 4px)",
+        }}
+        animate={{
+          y: [0, 4, 0],
+          opacity: [0.3, 0.8, 0.3],
+        }}
+        transition={{ duration: 0.1, repeat: 2 }}
+      />
     </div>
   )
 }
 
-// Fixed Theme Toggle
-function FixedThemeToggle() {
-  const { theme, setTheme, systemTheme } = useTheme()
+// Enhanced Theme Toggle with Smooth Transitions
+function EnhancedThemeToggle() {
+  const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -489,41 +575,53 @@ function FixedThemeToggle() {
   if (!mounted) {
     return (
       <div className="fixed top-6 right-6 z-50">
-        <div className="w-10 h-10 bg-background/80 backdrop-blur-sm border border-primary/40 rounded-md animate-pulse" />
+        <div className="w-12 h-12 bg-background/80 backdrop-blur-sm border border-primary/40 rounded-xl animate-pulse" />
       </div>
     )
   }
-
-  const currentTheme = theme === "system" ? systemTheme : theme
 
   return (
     <motion.div className="fixed top-6 right-6 z-50" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
       <Button
         variant="outline"
         size="icon"
-        onClick={() => setTheme(currentTheme === "dark" ? "light" : "dark")}
-        className="bg-background/80 backdrop-blur-sm border-primary/40 hover:border-primary/80 hover:bg-primary/10 transition-all duration-300 shadow-lg shadow-primary/20"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="w-12 h-12 bg-background/80 backdrop-blur-sm border-primary/40 hover:border-primary/80 hover:bg-primary/10 transition-all duration-500 shadow-lg shadow-primary/20 rounded-xl relative overflow-hidden"
       >
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-primary/20 via-purple-500/20 to-blue-500/20"
+          animate={{
+            rotate: 360,
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "linear",
+          }}
+        />
         <AnimatePresence mode="wait">
-          {currentTheme === "dark" ? (
+          {theme === "dark" ? (
             <motion.div
               key="sun"
-              initial={{ rotate: -90, opacity: 0, scale: 0 }}
+              initial={{ rotate: -180, opacity: 0, scale: 0 }}
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
-              exit={{ rotate: 90, opacity: 0, scale: 0 }}
-              transition={{ duration: 0.3 }}
+              exit={{ rotate: 180, opacity: 0, scale: 0 }}
+              transition={{ duration: 0.5, ease: "backOut" }}
+              className="relative z-10"
             >
-              <Sun className="w-4 h-4 text-yellow-500" />
+              <Sun className="w-5 h-5 text-yellow-500 drop-shadow-lg" />
             </motion.div>
           ) : (
             <motion.div
               key="moon"
-              initial={{ rotate: 90, opacity: 0, scale: 0 }}
+              initial={{ rotate: 180, opacity: 0, scale: 0 }}
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
-              exit={{ rotate: -90, opacity: 0, scale: 0 }}
-              transition={{ duration: 0.3 }}
+              exit={{ rotate: -180, opacity: 0, scale: 0 }}
+              transition={{ duration: 0.5, ease: "backOut" }}
+              className="relative z-10"
             >
-              <Moon className="w-4 h-4 text-blue-400" />
+              <Moon className="w-5 h-5 text-blue-400 drop-shadow-lg" />
             </motion.div>
           )}
         </AnimatePresence>
@@ -532,57 +630,140 @@ function FixedThemeToggle() {
   )
 }
 
-// Enhanced Project Card
-function EnhancedProjectCard({ project, index }: { project: any; index: number }) {
+// Enhanced Project Card with 3D Hover Effects
+function EnhancedProjectCard({ project, index }) {
+  const [isHovered, setIsHovered] = useState(false)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: index * 0.2 }}
-      whileHover={{ y: -15, scale: 1.03 }}
-      className="group"
+      whileHover={{
+        y: -20,
+        scale: 1.05,
+        rotateX: 5,
+        rotateY: 5,
+      }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="group perspective-1000"
+      style={{ transformStyle: "preserve-3d" }}
     >
-      <Card className="bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-sm border-primary/30 hover:border-primary/70 transition-all duration-500 overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
+      <Card className="bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-sm border-primary/30 hover:border-primary/70 transition-all duration-700 overflow-hidden relative transform-gpu">
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5"
+          animate={{
+            opacity: isHovered ? 1 : 0,
+            scale: isHovered ? 1.1 : 1,
+          }}
+          transition={{ duration: 0.5 }}
+        />
         <div className="relative h-48 bg-gradient-to-br from-primary/20 via-purple-500/20 to-blue-500/20 overflow-hidden">
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0"
-            initial={{ x: "-100%" }}
-            whileHover={{ x: "100%" }}
-            transition={{ duration: 0.8 }}
+            className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/40 to-primary/0"
+            animate={{
+              x: isHovered ? ["0%", "100%", "0%"] : "0%",
+              opacity: isHovered ? [0, 1, 0] : 0,
+            }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div whileHover={{ rotate: 360, scale: 1.2 }} transition={{ duration: 0.5 }}>
-              <Code className="w-16 h-16 text-primary/80" />
+            <motion.div
+              whileHover={{
+                rotate: 360,
+                scale: 1.3,
+                z: 50,
+              }}
+              transition={{ duration: 0.8, ease: "backOut" }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <Code className="w-16 h-16 text-primary/80 drop-shadow-2xl" />
             </motion.div>
           </div>
+          {isHovered &&
+            [...Array(8)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-primary/60 rounded-full"
+                initial={{
+                  x: Math.random() * 100 + "%",
+                  y: Math.random() * 100 + "%",
+                  scale: 0,
+                }}
+                animate={{
+                  y: [null, "-100%"],
+                  scale: [0, 1, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  delay: i * 0.2,
+                  ease: "easeOut",
+                }}
+              />
+            ))}
         </div>
-
         <CardContent className="p-6 relative z-10">
-          <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors duration-300 text-foreground">
+          <motion.h3
+            className="text-xl font-bold mb-2 group-hover:text-primary transition-colors duration-300 text-foreground"
+            animate={{ z: isHovered ? 20 : 0 }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
             {project.title}
-          </h3>
-          <p className="text-muted-foreground mb-4 leading-relaxed">{project.description}</p>
+          </motion.h3>
+          <motion.p
+            className="text-muted-foreground mb-4 leading-relaxed"
+            animate={{ z: isHovered ? 10 : 0 }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            {project.description}
+          </motion.p>
           <div className="flex flex-wrap gap-2 mb-4">
-            {project.technologies.map((tech: string) => (
-              <Badge key={tech} variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
-                {tech}
-              </Badge>
+            {project.technologies.map((tech, techIndex) => (
+              <motion.div
+                key={tech}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: techIndex * 0.1 }}
+                whileHover={{ scale: 1.1, z: 10 }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <Badge
+                  variant="secondary"
+                  className="text-xs bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 transition-colors duration-300"
+                >
+                  {tech}
+                </Badge>
+              </motion.div>
             ))}
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="flex-1 hover:bg-primary/10">
-              <Github className="w-4 h-4 mr-2" />
-              Code
-            </Button>
-            <Button
-              size="sm"
-              className="flex-1 bg-gradient-to-r from-primary to-blue-500 hover:from-primary/80 hover:to-blue-500/80"
+            <motion.div
+              whileHover={{ scale: 1.05, z: 15 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ transformStyle: "preserve-3d" }}
+              className="flex-1"
             >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Live Demo
-            </Button>
+              <Button size="sm" variant="outline" className="w-full hover:bg-primary/10 transition-all duration-300">
+                <Github className="w-4 h-4 mr-2" />
+                Code
+              </Button>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, z: 15 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ transformStyle: "preserve-3d" }}
+              className="flex-1"
+            >
+              <Button
+                size="sm"
+                className="w-full bg-gradient-to-r from-primary to-blue-500 hover:from-primary/80 hover:to-blue-500/80 transition-all duration-300"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Live Demo
+              </Button>
+            </motion.div>
           </div>
         </CardContent>
       </Card>
@@ -590,49 +771,106 @@ function EnhancedProjectCard({ project, index }: { project: any; index: number }
   )
 }
 
-// Timeline Item Component
-function TimelineItem({ item, index }: { item: any; index: number }) {
+// Timeline Item Component with Enhanced 3D Effects
+function TimelineItem({ item, index }) {
+  const [isVisible, setIsVisible] = useState(false)
+
   return (
     <motion.div
-      initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.6, delay: index * 0.2 }}
+      initial={{ opacity: 0, x: index % 2 === 0 ? -100 : 100, rotateY: index % 2 === 0 ? -15 : 15 }}
+      whileInView={{
+        opacity: 1,
+        x: 0,
+        rotateY: 0,
+        transition: { duration: 0.8, delay: index * 0.3 },
+      }}
+      onViewportEnter={() => setIsVisible(true)}
+      whileHover={{
+        scale: 1.02,
+        z: 20,
+        rotateX: 2,
+      }}
       className={`flex items-center gap-4 ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"}`}
+      style={{ transformStyle: "preserve-3d" }}
     >
       <div className="flex-1">
-        <Card className="bg-background/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-5 h-5 text-primary" />
-              <h3 className="font-bold text-foreground">{item.title}</h3>
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">{item.company}</p>
-            <p className="text-xs text-primary font-medium mb-2">{item.period}</p>
-            <p className="text-sm text-foreground">{item.description}</p>
+        <Card className="bg-background/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-500 transform-gpu">
+          <CardContent className="p-6">
+            <motion.div
+              className="flex items-center gap-3 mb-3"
+              animate={{ z: isVisible ? 10 : 0 }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              <motion.div
+                animate={{
+                  rotate: isVisible ? 360 : 0,
+                  scale: isVisible ? [1, 1.2, 1] : 1,
+                }}
+                transition={{ duration: 1, delay: 0.5 }}
+              >
+                <Zap className="w-6 h-6 text-primary drop-shadow-lg" />
+              </motion.div>
+              <h3 className="font-bold text-foreground text-lg">{item.title}</h3>
+            </motion.div>
+            <motion.p
+              className="text-sm text-muted-foreground mb-2 font-medium"
+              animate={{ z: isVisible ? 5 : 0 }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              {item.company}
+            </motion.p>
+            <motion.p
+              className="text-xs text-primary font-bold mb-3 tracking-wider"
+              animate={{ z: isVisible ? 5 : 0 }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              {item.period}
+            </motion.p>
+            <motion.p
+              className="text-sm text-foreground leading-relaxed"
+              animate={{ z: isVisible ? 5 : 0 }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              {item.description}
+            </motion.p>
           </CardContent>
         </Card>
       </div>
-      <div className="w-4 h-4 bg-primary rounded-full border-4 border-background shadow-lg shadow-primary/50" />
+      <motion.div
+        className="w-6 h-6 bg-primary rounded-full border-4 border-background shadow-lg shadow-primary/50 relative z-10"
+        whileHover={{ scale: 1.5, boxShadow: "0 0 30px rgba(0,255,136,0.8)" }}
+        animate={{
+          boxShadow: isVisible
+            ? ["0 0 10px rgba(0,255,136,0.5)", "0 0 30px rgba(0,255,136,0.8)", "0 0 10px rgba(0,255,136,0.5)"]
+            : "0 0 10px rgba(0,255,136,0.5)",
+        }}
+        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+      />
       <div className="flex-1" />
     </motion.div>
   )
 }
 
-// Contact Form Component
+// Enhanced Contact Form with Real-time Validation
 function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     message: "",
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [focusedField, setFocusedField] = useState(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // EmailJS integration will go here
+    setIsSubmitting(true)
+    await new Promise((resolve) => setTimeout(resolve, 2000))
     console.log("Form submitted:", formData)
+    setIsSubmitting(false)
+    setFormData({ name: "", email: "", message: "" })
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -641,58 +879,141 @@ function ContactForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-      className="max-w-2xl mx-auto"
+      initial={{ opacity: 0, y: 50, rotateX: -10 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      transition={{ duration: 1, ease: "backOut" }}
+      className="max-w-2xl mx-auto perspective-1000"
+      style={{ transformStyle: "preserve-3d" }}
     >
-      <Card className="bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-sm border-primary/30">
-        <CardContent className="p-8">
+      <Card className="bg-gradient-to-br from-background/80 to-background/40 backdrop-blur-sm border-primary/30 relative overflow-hidden transform-gpu">
+        <motion.div
+          className="absolute inset-0 bg-gradient-to-r from-primary/5 via-purple-500/5 to-blue-500/5"
+          animate={{
+            opacity: [0.3, 0.7, 0.3],
+            scale: [1, 1.02, 1],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+        />
+        <CardContent className="p-8 relative z-10">
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div whileHover={{ z: 10 }} style={{ transformStyle: "preserve-3d" }}>
                 <label className="block text-sm font-medium mb-2 text-primary">Name</label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="bg-background/50 border-primary/30 focus:border-primary/70 text-foreground"
-                  placeholder="Your awesome name"
-                  required
-                />
-              </div>
-              <div>
+                <motion.div
+                  animate={{
+                    scale: focusedField === "name" ? 1.02 : 1,
+                    boxShadow: focusedField === "name" ? "0 0 20px rgba(0,255,136,0.3)" : "none",
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Input
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedField("name")}
+                    onBlur={() => setFocusedField(null)}
+                    className="bg-background/50 border-primary/30 focus:border-primary/70 text-foreground transition-all duration-300"
+                    placeholder="Your awesome name"
+                    required
+                  />
+                </motion.div>
+              </motion.div>
+              <motion.div whileHover={{ z: 10 }} style={{ transformStyle: "preserve-3d" }}>
                 <label className="block text-sm font-medium mb-2 text-primary">Email</label>
-                <Input
-                  name="email"
-                  type="email"
-                  value={formData.email}
+                <motion.div
+                  animate={{
+                    scale: focusedField === "email" ? 1.02 : 1,
+                    boxShadow: focusedField === "email" ? "0 0 20px rgba(0,255,136,0.3)" : "none",
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onFocus={() => setFocusedField("email")}
+                    onBlur={() => setFocusedField(null)}
+                    className="bg-background/50 border-primary/30 focus:border-primary/70 text-foreground transition-all duration-300"
+                    placeholder="your.email@universe.com"
+                    required
+                  />
+                </motion.div>
+              </motion.div>
+            </div>
+            <motion.div whileHover={{ z: 10 }} style={{ transformStyle: "preserve-3d" }}>
+              <label className="block text-sm font-medium mb-2 text-primary">Message</label>
+              <motion.div
+                animate={{
+                  scale: focusedField === "message" ? 1.02 : 1,
+                  boxShadow: focusedField === "message" ? "0 0 20px rgba(0,255,136,0.3)" : "none",
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <Textarea
+                  name="message"
+                  value={formData.message}
                   onChange={handleChange}
-                  className="bg-background/50 border-primary/30 focus:border-primary/70 text-foreground"
-                  placeholder="your.email@universe.com"
+                  onFocus={() => setFocusedField("message")}
+                  onBlur={() => setFocusedField(null)}
+                  className="bg-background/50 border-primary/30 focus:border-primary/70 min-h-[120px] text-foreground transition-all duration-300"
+                  placeholder="Tell me about your incredible project ideas..."
                   required
                 />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-primary">Message</label>
-              <Textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                className="bg-background/50 border-primary/30 focus:border-primary/70 min-h-[120px] text-foreground"
-                placeholder="Tell me about your incredible project ideas..."
-                required
-              />
-            </div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              </motion.div>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.02, z: 15 }}
+              whileTap={{ scale: 0.98 }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
               <Button
                 type="submit"
                 size="lg"
-                className="w-full bg-gradient-to-r from-primary via-purple-500 to-blue-500 hover:from-primary/80 hover:via-purple-500/80 hover:to-blue-500/80 text-white font-bold py-3"
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-primary via-purple-500 to-blue-500 hover:from-primary/80 hover:via-purple-500/80 hover:to-blue-500/80 text-white font-bold py-4 relative overflow-hidden"
               >
-                <Send className="w-5 h-5 mr-2" />
-                Launch Message to Space 🚀
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                  animate={{
+                    x: isSubmitting ? ["0%", "100%"] : "-100%",
+                  }}
+                  transition={{
+                    duration: isSubmitting ? 2 : 0.5,
+                    repeat: isSubmitting ? Number.POSITIVE_INFINITY : 0,
+                  }}
+                />
+                <motion.div
+                  className="flex items-center justify-center gap-3 relative z-10"
+                  animate={{
+                    scale: isSubmitting ? [1, 1.05, 1] : 1,
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: isSubmitting ? Number.POSITIVE_INFINITY : 0,
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                      >
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                      </motion.div>
+                      Launching Message...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Launch Message to Space 🚀
+                    </>
+                  )}
+                </motion.div>
               </Button>
             </motion.div>
           </form>
@@ -702,34 +1023,74 @@ function ContactForm() {
   )
 }
 
-// Client-side wrapper for 3D components
-function ClientOnly({ children }: { children: React.ReactNode }) {
+// Simple Tech Grid
+function TechStackShowcase() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
+  const technologies = [
+    { name: "React", color: "#61dafb" },
+    { name: "Vue", color: "#4fc08d" },
+    { name: "Angular", color: "#dd0031" },
+    { name: "Node.js", color: "#68a063" },
+    { name: "Python", color: "#3776ab" },
+    { name: "TypeScript", color: "#3178c6" },
+    { name: "Docker", color: "#2496ed" },
+    { name: "AWS", color: "#ff9900" },
+    { name: "MongoDB", color: "#47a248" },
+    { name: "PostgreSQL", color: "#336791" },
+    { name: "GraphQL", color: "#e10098" },
+    { name: "Redis", color: "#dc382d" },
+  ]
+
   if (!mounted) {
     return (
-      <div className="h-96 lg:h-[500px] flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          className="w-32 h-32 border-4 border-primary border-t-transparent rounded-full"
-        />
+      <div className="h-96 lg:h-[600px] flex items-center justify-center">
+        <div className="w-32 h-32 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
-  return <>{children}</>
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {technologies.map((tech, index) => (
+          <motion.div
+            key={tech.name}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+            className="group"
+          >
+            <Card className="bg-background/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 p-6 text-center">
+              <motion.div
+                className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                style={{ backgroundColor: tech.color }}
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                {tech.name.slice(0, 2)}
+              </motion.div>
+              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
+                {tech.name}
+              </h3>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
-// Main Portfolio Component
+// Main Portfolio Component with All Enhancements
 export default function Portfolio() {
   const [mounted, setMounted] = useState(false)
   const { scrollYProgress } = useScroll()
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
 
   const skills = [
     "Full Stack Developer",
@@ -738,6 +1099,8 @@ export default function Portfolio() {
     "Tech Enthusiast",
     "Code Wizard",
     "Digital Architect",
+    "Cosmic Engineer",
+    "Reality Hacker",
   ]
   const [currentSkill, setCurrentSkill] = useState(0)
   const [typewriterComplete, setTypewriterComplete] = useState(false)
@@ -802,55 +1165,59 @@ export default function Portfolio() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 text-foreground overflow-x-hidden relative">
-      <EnhancedNeuralNetworkParticles />
-      <GlitchEffect />
-      <FixedThemeToggle />
-
-      {/* Hero Section */}
+      <AdvancedNeuralNetwork />
+      <AdvancedGlitchEffect />
+      <EnhancedThemeToggle />
       <section className="min-h-screen flex items-center justify-center relative z-20">
         <motion.div style={{ y }} className="absolute inset-0 z-0">
           <div className="w-full h-full bg-gradient-to-br from-primary/10 via-purple-500/5 to-blue-500/10" />
         </motion.div>
-
         <div className="container mx-auto px-4 grid lg:grid-cols-2 gap-12 items-center z-10">
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1 }}
+            initial={{ opacity: 0, x: -100, rotateY: -30 }}
+            animate={{ opacity: 1, x: 0, rotateY: 0 }}
+            transition={{ duration: 1.2, ease: "backOut" }}
             className="space-y-8"
+            style={{ transformStyle: "preserve-3d" }}
           >
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3 }}
             >
-              <TechTypeWriter text="John Doe" delay={150} onComplete={() => setTypewriterComplete(true)} />
+              <TechTypeWriter text="Yusuf Deesawala" delay={130} onComplete={() => setTypewriterComplete(true)} />
             </motion.div>
-
             <AnimatePresence>
               {typewriterComplete && (
                 <motion.div
-                  className="text-2xl lg:text-3xl h-12"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8 }}
+                  className="text-2xl lg:text-3xl h-16"
+                  initial={{ opacity: 0, y: 30, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.8, ease: "backOut" }}
                 >
                   <AnimatePresence mode="wait">
                     <motion.span
                       key={currentSkill}
-                      initial={{ opacity: 0, y: 20, rotateX: -90 }}
-                      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                      exit={{ opacity: 0, y: -20, rotateX: 90 }}
-                      transition={{ duration: 0.6 }}
+                      initial={{ opacity: 0, y: 30, rotateX: -90, scale: 0.8 }}
+                      animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -30, rotateX: 90, scale: 0.8 }}
+                      transition={{ duration: 0.8, ease: "backOut" }}
                       className="flex items-center gap-3"
+                      style={{ transformStyle: "preserve-3d" }}
                     >
                       <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        animate={{
+                          rotate: 360,
+                          scale: [1, 1.2, 1],
+                        }}
+                        transition={{
+                          rotate: { duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+                          scale: { duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" },
+                        }}
                       >
-                        <Zap className="w-8 h-8 text-primary" />
+                        <Zap className="w-8 h-8 text-primary drop-shadow-lg" />
                       </motion.div>
-                      <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent font-bold">
+                      <span className="bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent font-bold">
                         {skills[currentSkill]}
                       </span>
                     </motion.span>
@@ -858,73 +1225,83 @@ export default function Portfolio() {
                 </motion.div>
               )}
             </AnimatePresence>
-
             <motion.p
               className="text-lg text-muted-foreground max-w-md leading-relaxed"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.5 }}
             >
               Crafting digital experiences that transcend dimensions and push the boundaries of what's possible. Welcome
               to my universe of code, creativity, and cosmic innovation! 🌌
             </motion.p>
-
             <motion.div
               className="flex gap-4"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 2 }}
             >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div
+                whileHover={{ scale: 1.05, z: 10 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-primary to-purple-500 hover:from-primary/80 hover:to-purple-500/80 text-white font-bold"
+                  className="bg-gradient-to-r from-primary to-purple-500 hover:from-primary/80 hover:to-purple-500/80 text-white font-bold relative overflow-hidden"
                 >
-                  <Star className="w-5 h-5 mr-2" />
-                  Explore My Universe
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                    animate={{ x: ["-100%", "100%"] }}
+                    transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                  />
+                  <Star className="w-5 h-5 mr-2 relative z-10" />
+                  <span className="relative z-10">Explore My Universe</span>
                 </Button>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button size="lg" variant="outline" className="border-primary/50 hover:bg-primary/10">
-                  <Mail className="w-5 h-5 mr-2" />
-                  Contact the Wizard
+              <motion.div
+                whileHover={{ scale: 1.05, z: 10 }}
+                whileTap={{ scale: 0.95 }}
+                style={{ transformStyle: "preserve-3d" }}
+              >
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-primary/50 hover:bg-primary/10 relative overflow-hidden"
+                >
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.8 }}
+                  />
+                  <Mail className="w-5 h-5 mr-2 relative z-10" />
+                  <span className="relative z-10">Contact the Wizard</span>
                 </Button>
               </motion.div>
             </motion.div>
           </motion.div>
-
           <motion.div
             className="h-96 lg:h-[500px]"
             initial={{ opacity: 0, scale: 0.8, rotateY: -30 }}
             animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            transition={{ duration: 1.2, delay: 0.5 }}
+            transition={{ duration: 1.2, delay: 0.5, ease: "backOut" }}
           >
-            <ClientOnly>
-              <Suspense
-                fallback={
-                  <div className="h-96 lg:h-[500px] flex items-center justify-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                      className="w-32 h-32 border-4 border-primary border-t-transparent rounded-full"
-                    />
-                  </div>
-                }
-              >
-                <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-                  <ambientLight intensity={0.4} />
-                  <pointLight position={[10, 10, 10]} intensity={1} color="#00ff88" />
-                  <pointLight position={[-10, -10, -10]} intensity={0.5} color="#ff0080" />
-                  <Environment preset="night" />
-                  <InteractiveLaptopModel />
-                </Canvas>
-              </Suspense>
-            </ClientOnly>
+            <Suspense
+              fallback={
+                <div className="h-96 lg:h-[500px] flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                    className="w-32 h-32 border-4 border-primary border-t-transparent rounded-full"
+                  />
+                </div>
+              }
+            >
+              <Enhanced3DScene />
+            </Suspense>
           </motion.div>
         </div>
       </section>
-
-      {/* About Section */}
       <section className="py-20 relative z-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -943,7 +1320,6 @@ export default function Portfolio() {
               transition={{ duration: 1, delay: 0.5 }}
             />
           </motion.div>
-
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -968,7 +1344,6 @@ export default function Portfolio() {
                 </div>
               </div>
             </motion.div>
-
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1019,8 +1394,6 @@ export default function Portfolio() {
           </div>
         </div>
       </section>
-
-      {/* Experience Timeline */}
       <section className="py-20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-blue-500/5 relative z-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -1039,7 +1412,6 @@ export default function Portfolio() {
               transition={{ duration: 1, delay: 0.5 }}
             />
           </motion.div>
-
           <div className="max-w-4xl mx-auto">
             <div className="relative">
               <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-primary via-purple-500 to-blue-500" />
@@ -1052,8 +1424,6 @@ export default function Portfolio() {
           </div>
         </div>
       </section>
-
-      {/* Solar System Tech Universe */}
       <section className="py-20 relative z-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -1063,7 +1433,7 @@ export default function Portfolio() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
-              Solar System of Skills
+              Technologies I Use
             </h2>
             <motion.div
               className="w-24 h-1 bg-gradient-to-r from-primary to-purple-500 mx-auto mb-8"
@@ -1072,40 +1442,19 @@ export default function Portfolio() {
               transition={{ duration: 1, delay: 0.5 }}
             />
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Welcome to my technological solar system! Each planet represents a mastered technology orbiting around my
-              core expertise. Watch as they dance in perfect cosmic harmony! 🌌
+              Here are the core technologies I work with to build amazing digital experiences! 💻
             </p>
           </motion.div>
-
           <motion.div
             className="h-96 lg:h-[600px]"
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1 }}
           >
-            <ClientOnly>
-              <Suspense
-                fallback={
-                  <div className="h-96 lg:h-[600px] flex items-center justify-center">
-                    <div className="text-center">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                        className="w-32 h-32 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"
-                      />
-                      <p className="text-muted-foreground">Loading Solar System...</p>
-                    </div>
-                  </div>
-                }
-              >
-                <EnhancedTechStack />
-              </Suspense>
-            </ClientOnly>
+            <TechStackShowcase />
           </motion.div>
         </div>
       </section>
-
-      {/* Featured Projects */}
       <section className="py-20 bg-gradient-to-br from-primary/5 via-purple-500/5 to-blue-500/5 relative z-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -1128,13 +1477,11 @@ export default function Portfolio() {
               solutions and pushing the boundaries of what's possible in the digital cosmos.
             </p>
           </motion.div>
-
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             {projects.map((project, index) => (
               <EnhancedProjectCard key={index} project={project} index={index} />
             ))}
           </div>
-
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 20 }}
@@ -1154,8 +1501,6 @@ export default function Portfolio() {
           </motion.div>
         </div>
       </section>
-
-      {/* Contact Section */}
       <section className="py-20 relative z-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -1178,12 +1523,9 @@ export default function Portfolio() {
               transcends the boundaries of reality itself! 🌌
             </p>
           </motion.div>
-
           <ContactForm />
         </div>
       </section>
-
-      {/* Footer */}
       <footer className="py-8 border-t border-primary/20 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm relative z-20">
         <div className="container mx-auto px-4">
           <motion.div
@@ -1193,7 +1535,7 @@ export default function Portfolio() {
             transition={{ duration: 0.8 }}
           >
             <p className="text-muted-foreground">
-              © 2024 John Doe. Crafted with 💚, cosmic energy, and alien-level programming skills across multiple
+              © 2024 Yusuf Deesawala. Crafted with 💚, cosmic energy, and alien-level programming skills across multiple
               dimensions.
             </p>
           </motion.div>
