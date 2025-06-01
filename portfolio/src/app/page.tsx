@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef, Suspense } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { OrbitControls, Environment, Float, Html } from "@react-three/drei"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Github, ExternalLink, Mail, Sun, Moon, Code, Zap, Star, Send } from "lucide-react"
 import { useTheme } from "@/components/theme-provider"
-import { useFBX } from '@react-three/drei'
+import { useFBX } from "@react-three/drei"
 import * as THREE from "three"
 
 // Enhanced Typewriter Effect with Matrix Glitch
@@ -121,7 +121,7 @@ function Custom3DModel({ mousePosition }) {
   // Load FBX model
   let model = null
   try {
-    model = useFBX('/3d_model/source/pc.fbx')
+    model = useFBX("/3d_model/source/pc.fbx")
     console.log("Model loaded successfully:", model) // Debug: Check if model loads
     model.traverse((child) => {
       if (child.isMesh) {
@@ -217,7 +217,11 @@ function Custom3DModel({ mousePosition }) {
             {[...Array(6)].map((_, i) => (
               <Float key={i} speed={3 + i} rotationIntensity={0.5} floatIntensity={0.8}>
                 <mesh
-                  position={[Math.sin((i * Math.PI) / 3) * 2.5, 1.5 + Math.sin(i) * 0.5, Math.cos((i * Math.PI) / 3) * 2.5]}
+                  position={[
+                    Math.sin((i * Math.PI) / 3) * 2.5,
+                    1.5 + Math.sin(i) * 0.5,
+                    Math.cos((i * Math.PI) / 3) * 2.5,
+                  ]}
                 >
                   <octahedronGeometry args={[0.1 + i * 0.02]} />
                   <meshStandardMaterial
@@ -286,7 +290,11 @@ function Enhanced3DScene() {
   }, [])
 
   return (
-    <Canvas camera={{ position: [0, 2, 6], fov: 60 }} shadows gl={{ antialias: true, alpha: true, toneMappingExposure: 1.3 }}>
+    <Canvas
+      camera={{ position: [0, 2, 6], fov: 60 }}
+      shadows
+      gl={{ antialias: true, alpha: true, toneMappingExposure: 1.3 }}
+    >
       <ambientLight intensity={0.2} />
       <directionalLight
         position={[3, 5, 3]}
@@ -304,16 +312,8 @@ function Enhanced3DScene() {
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
-      <pointLight
-        position={[-5, -5, -5]}
-        intensity={0.4}
-        color="#ff0080"
-      />
-      <pointLight
-        position={[0, 8, 0]}
-        intensity={0.5}
-        color="#00aaff"
-      />
+      <pointLight position={[-5, -5, -5]} intensity={0.4} color="#ff0080" />
+      <pointLight position={[0, 8, 0]} intensity={0.5} color="#00aaff" />
       <fog attach="fog" args={["#000011", 5, 20]} />
       <Environment preset="studio" />
       <Custom3DModel mousePosition={mousePosition} />
@@ -327,15 +327,13 @@ function Enhanced3DScene() {
       />
     </Canvas>
   )
-} 
+}
 
 // Enhanced Neural Network with Advanced Particle Physics
 function AdvancedNeuralNetwork() {
   const [mounted, setMounted] = useState(false)
   const canvasRef = useRef(null)
-  const particlesRef = useRef(
-    []
-  )
+  const particlesRef = useRef([])
 
   useEffect(() => {
     setMounted(true)
@@ -1032,18 +1030,18 @@ function TechStackShowcase() {
   }, [])
 
   const technologies = [
-    { name: "React", color: "#61dafb" },
-    { name: "Vue", color: "#4fc08d" },
-    { name: "Angular", color: "#dd0031" },
-    { name: "Node.js", color: "#68a063" },
-    { name: "Python", color: "#3776ab" },
-    { name: "TypeScript", color: "#3178c6" },
-    { name: "Docker", color: "#2496ed" },
-    { name: "AWS", color: "#ff9900" },
-    { name: "MongoDB", color: "#47a248" },
-    { name: "PostgreSQL", color: "#336791" },
-    { name: "GraphQL", color: "#e10098" },
-    { name: "Redis", color: "#dc382d" },
+    { name: "React", logo: "/logos/react.png" },
+    { name: "Docker", logo: "/logos/docker.png" },
+    { name: "Flask", logo: "/logos/flask.png" },
+    { name: "Git", logo: "/logos/git.png" },
+    { name: "HTML", logo: "/logos/html.png" },
+    { name: "CSS", logo: "/logos/text.png" },
+    { name: "MongoDB", logo: "/logos/mongo.png" },
+    { name: "PostgreSQL", logo: "/logos/postgre.png" },
+    { name: "Python", logo: "/logos/python.png" },
+    { name: "PyTorch", logo: "/logos/pytorch.png" },
+    { name: "TensorFlow", logo: "/logos/tensorflow.png" },
+    { name: "JavaScript", logo: "/logos/js.png" },
   ]
 
   if (!mounted) {
@@ -1055,34 +1053,87 @@ function TechStackShowcase() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {technologies.map((tech, index) => (
-          <motion.div
-            key={tech.name}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ scale: 1.05, y: -5 }}
-            className="group"
-          >
-            <Card className="bg-background/50 backdrop-blur-sm border-primary/20 hover:border-primary/50 transition-all duration-300 p-6 text-center">
-              <motion.div
-                className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
-                style={{ backgroundColor: tech.color }}
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                {tech.name.slice(0, 2)}
-              </motion.div>
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors duration-300">
-                {tech.name}
-              </h3>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+    <div className="h-96 lg:h-[600px] flex items-center justify-center">
+      <Canvas camera={{ position: [0, 0, 8], fov: 60 }}>
+        <ambientLight intensity={0.6} />
+        <pointLight position={[10, 10, 10]} intensity={0.8} />
+        <TechSphere technologies={technologies} />
+        <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1} />
+      </Canvas>
     </div>
+  )
+}
+
+function TechSphere({ technologies }) {
+  const groupRef = useRef()
+  const sphereRadius = 4  
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.y = state.clock.elapsedTime * 0.2
+    }
+  })
+
+  // Calculate positions on sphere surface
+  const positions = technologies.map((_, index) => {
+    const phi = Math.acos(-1 + (2 * index) / technologies.length)
+    const theta = Math.sqrt(technologies.length * Math.PI) * phi
+
+    return [
+      sphereRadius * Math.cos(theta) * Math.sin(phi),
+      sphereRadius * Math.cos(phi),
+      sphereRadius * Math.sin(theta) * Math.sin(phi),
+    ]
+  })
+
+  return (
+    <group ref={groupRef}>
+      {technologies.map((tech, index) => (
+        <TechLogo key={tech.name} position={positions[index]} logo={tech.logo} name={tech.name} />
+      ))}
+    </group>
+  )
+}
+
+function TechLogo({ position, logo, name }) {
+  const meshRef = useRef()
+  const [hovered, setHovered] = useState(false)
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.lookAt(0, 0, 0)
+      meshRef.current.rotation.z = 0
+    }
+  })
+
+  return (
+    <group position={position}>
+      <mesh
+        ref={meshRef}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        scale={hovered ? 1.2 : 1}
+      >
+        <planeGeometry args={[0.8, 0.8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+      <Html center>
+        <motion.div
+          className="w-12 h-12 rounded-full bg-white/90 backdrop-blur-sm border border-primary/20 flex items-center justify-center shadow-lg"
+          whileHover={{ scale: 1.2 }}
+          transition={{ duration: 0.2 }}
+        >
+          <img
+            src={logo || "/placeholder.svg"}
+            alt={`${name} logo`}
+            className="w-8 h-8 object-contain"
+            onError={(e) => {
+              e.target.style.display = "none"
+            }}
+          />
+        </motion.div>
+      </Html>
+    </group>
   )
 }
 
@@ -1092,16 +1143,7 @@ export default function Portfolio() {
   const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"])
 
-  const skills = [
-    "Full Stack Developer",
-    "UI/UX Designer",
-    "Problem Solver",
-    "Tech Enthusiast",
-    "Code Wizard",
-    "Digital Architect",
-    "Cosmic Engineer",
-    "Reality Hacker",
-  ]
+  const skills = ["Full Stack Developer", "Data Scientist", "Problem Solver", "ML Engineer", "Code Wizard", "Kaggler"]
   const [currentSkill, setCurrentSkill] = useState(0)
   const [typewriterComplete, setTypewriterComplete] = useState(false)
 
@@ -1120,46 +1162,53 @@ export default function Portfolio() {
 
   const projects = [
     {
-      title: "Quantum E-Commerce Platform",
+      title: "Meet Sync",
       description:
-        "A next-generation e-commerce solution with AI-powered recommendations and real-time quantum inventory management.",
-      technologies: ["React", "Node.js", "MongoDB", "AI/ML", "Quantum Computing"],
+        "A next-gen meeting assistant with AI-driven task management, real-time transcription, and smart action item extraction — from emails to to-dos.",
+      technologies: ["React", "MongoDB", "Python", "AI/ML", "JavaScript", "Groq", "HTML", "CSS", "Flask"],
     },
     {
-      title: "Neural Chat Interface",
+      title: "Resume Analyzer",
       description:
-        "An advanced AI chatbot with consciousness-level natural language processing and emotional intelligence.",
-      technologies: ["Python", "TensorFlow", "React", "WebSocket", "Neural Networks"],
+        "An AI-powered resume analyzer tailored to your dream company — with smart job search and an interview-ready chatbot to guide your prep.",
+      technologies: ["Python", "HTML", "CSS", "Flask", "Gemini", "Machine Learning", "Data Science"],
     },
     {
-      title: "Cosmic Task Management",
+      title: "Spam Classifier",
       description:
-        "A galactic-scale project management tool with interdimensional collaboration and time-space synchronization.",
-      technologies: ["Next.js", "PostgreSQL", "Prisma", "Socket.io", "Blockchain"],
+        "A powerful spam classifier built from scratch using advanced machine learning techniques — filtering the noise with precision, speed, and intelligence.",
+      technologies: ["Python", "Streamlit", "Machine Learning", "NLP", "Data Science"],
     },
   ]
 
   const experience = [
     {
-      title: "Senior Full Stack Developer",
-      company: "Tech Innovations Inc.",
-      period: "2022 - Present",
+      title: "Started Coding in HTML & CSS",
+      company: "GRD Public School",
+      period: "2015 - 2018",
       description:
-        "Leading development of scalable web applications and mentoring junior developers in the art of code wizardry.",
+        "Began learning web development with HTML and CSS, creating simple and structured web pages. This early experience sparked my passion for building clean and user-friendly digital interfaces.",
     },
     {
-      title: "Frontend Developer",
-      company: "Digital Solutions Ltd.",
-      period: "2020 - 2022",
+      title: "Learnt Python",
+      company: "GRD Public School",
+      period: "2018 - 2021",
       description:
-        "Developed responsive user interfaces and improved application performance by 40% using alien technologies.",
+        "Learned Python fundamentals, focusing on problem-solving and basic programming concepts. Developed a strong foundation in coding logic and scripting through hands-on projects and practice.",
     },
     {
-      title: "Junior Developer",
-      company: "StartUp Ventures",
-      period: "2019 - 2020",
+      title: "Data Scientist",
+      company: "KGiSL Institute of Technology",
+      period: "2021 - 2023",
       description:
-        "Built and maintained web applications using modern JavaScript frameworks and cosmic programming principles.",
+        "Worked on data analysis, cleaning, and visualization to extract actionable insights from complex datasets. Applied machine learning techniques and statistical models to support decision-making and improve project outcomes.",
+    },
+    {
+      title: "Full Stack Development & ML Engineering",
+      company: "KGiSL Institute of Technology",
+      period: "2023 - Present",
+      description:
+        "Building full-stack applications while applying machine learning models to solve real-world problems. Combining backend and frontend development with data-driven insights to create impactful solutions.",
     },
   ]
 
@@ -1231,8 +1280,7 @@ export default function Portfolio() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 1.5 }}
             >
-              Crafting digital experiences that transcend dimensions and push the boundaries of what's possible. Welcome
-              to my universe of code, creativity, and cosmic innovation! 🌌
+              Building digital experiences that go beyond the screen. Code. Design. Innovation — welcome to my world. 🌌
             </motion.p>
             <motion.div
               className="flex gap-4"
@@ -1311,7 +1359,7 @@ export default function Portfolio() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
-              About the Cosmic Developer
+              The Mind Behind the Code
             </h2>
             <motion.div
               className="w-24 h-1 bg-gradient-to-r from-primary to-purple-500 mx-auto"
@@ -1351,18 +1399,16 @@ export default function Portfolio() {
               className="space-y-6"
             >
               <h3 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-                Passionate Developer & Cosmic Architect
+                Creative Developer
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                With over 5 years of experience traversing the digital cosmos, I specialize in creating innovative
-                solutions that blend cutting-edge technology with otherworldly user experiences. My journey through the
-                tech universe has been powered by an insatiable curiosity and a passion for solving problems that others
-                deem impossible.
+                I’m a curious developer with 2 years of coding experience, focused on creating simple, effective, and
+                engaging digital experiences. I enjoy learning new technologies and turning ideas into functional,
+                well-crafted solutions.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                When I'm not coding in multiple dimensions, you'll find me exploring quantum algorithms, contributing to
-                intergalactic open-source projects, or mentoring fellow developers in the ancient arts of programming. I
-                believe in the power of technology to transform not just ideas, but entire realities.
+                Exploring the creative side of code is what keeps me inspired — every project is a chance to push
+                boundaries and build something meaningful.
               </p>
               <div className="flex flex-wrap gap-4">
                 <motion.div whileHover={{ scale: 1.05 }}>
@@ -1370,7 +1416,7 @@ export default function Portfolio() {
                     variant="secondary"
                     className="text-sm px-4 py-2 bg-gradient-to-r from-primary/20 to-purple-500/20 border-primary/30"
                   >
-                    🚀 Innovation Driven
+                    🚀 Code with Purpose
                   </Badge>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }}>
@@ -1378,7 +1424,7 @@ export default function Portfolio() {
                     variant="secondary"
                     className="text-sm px-4 py-2 bg-gradient-to-r from-purple-500/20 to-blue-500/20 border-purple-500/30"
                   >
-                    💡 Problem Solver
+                    💡 Solutions First
                   </Badge>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }}>
@@ -1386,7 +1432,7 @@ export default function Portfolio() {
                     variant="secondary"
                     className="text-sm px-4 py-2 bg-gradient-to-r from-blue-500/20 to-primary/20 border-blue-500/30"
                   >
-                    🎯 Detail Oriented
+                    🎯 Precision Focused
                   </Badge>
                 </motion.div>
               </div>
@@ -1403,7 +1449,7 @@ export default function Portfolio() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
-              My Cosmic Journey
+              The Path
             </h2>
             <motion.div
               className="w-24 h-1 bg-gradient-to-r from-primary to-purple-500 mx-auto"
@@ -1464,7 +1510,7 @@ export default function Portfolio() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-primary via-purple-500 to-blue-500 bg-clip-text text-transparent">
-              Cosmic Projects
+              My Projects
             </h2>
             <motion.div
               className="w-24 h-1 bg-gradient-to-r from-primary to-purple-500 mx-auto mb-8"
@@ -1473,8 +1519,7 @@ export default function Portfolio() {
               transition={{ duration: 1, delay: 0.5 }}
             />
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              A showcase of my interdimensional work - projects that demonstrate my passion for creating innovative
-              solutions and pushing the boundaries of what's possible in the digital cosmos.
+            Here’s a curated selection of my work. Each project reflects my approach to solving problems through thoughtful design and technology. I enjoy exploring new ideas and pushing what's possible in the digital space.
             </p>
           </motion.div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
@@ -1495,7 +1540,7 @@ export default function Portfolio() {
                 className="bg-gradient-to-r from-background/80 to-background/40 backdrop-blur-sm border-primary/50 hover:border-primary/80"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
-                Explore All Dimensions
+                Explore All Projects
               </Button>
             </motion.div>
           </motion.div>
